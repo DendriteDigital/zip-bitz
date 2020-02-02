@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Asteroids Blaster</title>
+<meta charset="utf-8" />
+<meta name="description" content="Online asteroids game, free, no ads, no plugins, works on iPad" />
+<meta name="keywords" content="asteroids, game, free, online, chrome, safari, iPad" />
+<meta name="generator" content="BBEdit 8.6" />
+<meta name="author" content="Gregory Scott Callen" />
+<meta name="copyright" content="2013" />
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<link rel="apple-touch-startup-image" href="scriptoidsstart.png" />
+<link rel="apple-touch-icon-precomposed" href="scriptoidsicon.png" />
+<script language="javascript" type="text/javascript">
+// Asteroids Blaster: Asteroids written in JavaScript
+// Copyright © 2010, 2013, 2016 by Gregory Scott Callen
+// All Rights Reserved.
+
+var myTime;
+
+var gMessage=1;
+
+var gTilt="tilt to rotate ship\n";
+gTilt=gTilt+"touch right to fire\n";
+gTilt=gTilt+"touch left to thrust\n";
+gTilt=gTilt+"touch center to begin";
+
+var gInsts=   "RETURN to start\n";
+gInsts=gInsts+"S to rotate left\n";
+gInsts=gInsts+"D to rotate right\n";
+gInsts=gInsts+"L to fire\n";
+gInsts=gInsts+"K to thrust\n";
+gInsts=gInsts+"ESC to exit";
+
+var gChars=   "0123456789\n";
+gChars=gChars+"ABCDEFGHIJKLM\n";
+gChars=gChars+"NOPQRSTUVWXYZ\n";
+gChars=gChars+"abcdefghijklm\n";
+gChars=gChars+"nopqrstuvwxyz";
+
+var gTime=0;
+var gTick=0;
+var gCanvas;
+var gContext;
+var gs=1.00;
+var gx,gy;
+
+var gScore=1000;
+var gLives=3;
+var gShots=100;
+var gHits=0;
+var gRocks=0;
+
+var aAlien;
+var aBubble;
+var aBurn;
+var aDeath;
+var aMagic;
+var aOoops;
+var aOyeah;
+var aRock;
+var aShot;
+var aUFO;
+
+var g0 ="0".charCodeAt(0);
+var g9 ="9".charCodeAt(0);
+var gca="A".charCodeAt(0);
+var gcz="Z".charCodeAt(0);
+var gla="a".charCodeAt(0);
+var glz="z".charCodeAt(0);
+var gsp=" ".charCodeAt(0);
+
+var gKeys=Array();
+
+var gcos=Array();
+var gsin=Array();
+
+var gStars=Array();
+var gSprite=Array();
+
+var gMember=Array(
+	["roka",[15,0],[50,61],[46,122],[50,176],[46,235],[50,297],[47,357]],
+	["rokb",[8,0],[25,61],[23,122],[25,176],[23,235],[25,297],[24,357]],
+	["rokc",[2,0],[13,61],[11,122],[13,176],[12,235],[13,297],[12,357]],
+	["ship",[20,0],[20,140],[6,180],[6,180],[6,180],[20,220]],
+	["shot",[5,0],[1,45],[5,90],[1,135],[5,180],[1,225],[5,270],[1,315]],
+	["aufo",[12,90],[6,135],[20,170],[10,225],[10,315],[20,10],[6,45]],
+	["xtra",[20,30],[20,60],[6,90],[20,120],[20,150],[6,180],
+	        [20,210],[20,240],[6,270],[20,300],[20,330],[6,0]]);
+
+var gLetter=Array(
+	["0",[[2,0],[2,6],[0,6],[0,0],[2,0],[0,6]]],
+	["1",[[0,0],[1,0],[1,6]],[[0,6],[2,6]]],
+	["2",[[0,0],[2,0],[2,2],[0,2],[0,6],[2,6]]],
+	["3",[[0,0],[2,0],[2,6],[0,6]],[[2,2],[0,2]]],
+	["4",[[2,6],[2,0],[0,4],[2,4]]],
+	["5",[[2,0],[0,0],[0,2],[2,2],[0,6]]],
+	["6",[[2,0],[0,0],[0,6],[2,6],[2,2],[0,2]]],
+	["7",[[0,0],[2,0],[0,6]]],
+	["8",[[2,2],[0,2],[0,6],[2,6],[2,0],[0,0],[0,2]]],
+	["9",[[2,2],[0,2],[0,0],[2,0],[2,6]]],
+	["A",[[0,6],[1,0],[2,6]]],
+	["B",[[0,3],[2,3],[2,6],[0,6],[0,0],[1.3,0],[1.3,3]]],
+	["C",[[2,6],[0,6],[0,0],[2,0]]],
+	["D",[[0,0],[2,3],[0,6],[0,0]]],
+	["E",[[2,0],[0,0],[0,6],[2,6]],[[0,3],[1,3]]],
+	["F",[[2,0],[0,0],[0,6]],[[0,3],[1,3]]],
+	["G",[[2,0],[0,0],[0,6],[2,6],[2,3]]],
+	["H",[[0,0],[0,6]],[[0,3],[2,3]],[[2,6],[2,0]]],
+	["I",[[0,0],[2,0]],[[1,0],[1,6]],[[0,6],[2,6]]],
+	["J",[[0,0],[2,0],[2,0],[2,6],[0,4]]],
+	["K",[[2,0],[0,3],[2,6]],[[0,0],[0,6]]],
+	["L",[[0,0],[0,6],[2,6]]],
+	["M",[[0,6],[0,0],[1,2],[2,0],[2,6]]],
+	["N",[[0,6],[0,0],[2,6],[2,0]]],
+	["O",[[0,0],[0,6],[2,6],[2,0],[0,0]]],
+	["P",[[0,6],[0,0],[2,0],[2,3],[0,3]]],
+	["Q",[[1,4],[2,6],[2,0],[0,0],[0,6],[2,6]]],
+	["R",[[0,6],[0,0],[2,0],[2,3],[0,3],[2,6]]],
+	["S",[[2,0],[0,0],[0,3],[2,3],[2,6],[0,6]]],
+	["T",[[1,6],[1,0]],[[0,0],[2,0]]],
+	["U",[[0,0],[0,6],[2,6],[2,0]]],
+	["V",[[0,0],[1,6],[2,0]]],
+	["W",[[0,0],[0,6],[1,4],[2,6],[2,0]]],
+	["X",[[0,0],[2,6]],[[0,6],[2,0]]],
+	["Y",[[0,0],[1,3],[1,6]],[[1,3],[2,0]]],
+	["Z",[[0,0],[2,0],[0,6],[2,6]]],
+	["a",[[0,3],[2,3],[2,6],[0,6],[0,4],[2,4]]],
+	["b",[[0,0],[0,6],[2,6],[2,3],[0,3]]],
+	["c",[[2,6],[0,6],[0,3],[2,3]]],
+	["d",[[2,0],[2,6],[0,6],[0,3],[2,3]]],
+	["e",[[2,6],[0,6],[0,3],[2,3],[2,4.5],[0,4.5]]],
+	["f",[[2,0],[1,0],[1,6]],[[0,3],[2,3]]],
+	["g",[[0,8],[2,8],[2,3],[0,3],[0,6],[2,6]]],
+	["h",[[0,0],[0,6]],[[0,3],[2,3],[2,6]]],
+	["i",[[2,6],[0,6]],[[1,6],[1,3],[0,3]],[[1,1],[1,2]]],
+	["j",[[0,6],[2,8],[2,3],[0,3]],[[2,1],[2,2]]],
+	["k",[[2,2],[0,4],[2,6]],[[0,6],[0,0]]],
+	["l",[[0,0],[1,0],[1,6],[2,6]]],
+	["m",[[0,6],[0,3],[2,3],[2,6]],[[1,3],[1,6]]],
+	["n",[[0,6],[0,3],[2,3],[2,6]]],
+	["o",[[0,6],[0,3],[2,3],[2,6],[0,6]]],
+	["p",[[0,8],[0,3],[2,3],[2,6],[0,6]]],
+	["q",[[2,8],[2,3],[0,3],[0,6],[2,6]]],
+	["r",[[0,6],[0,3],[2,3]]],
+	["s",[[0,6],[2,6],[2,4.5],[0,4.5],[0,3],[2,3]]],
+	["t",[[1,0],[1,6],[2,6]],[[0,3],[2,3]]],
+	["u",[[0,3],[0,6],[2,6],[2,3]]],
+	["v",[[0,3],[1,6],[2,3]]],
+	["w",[[0,3],[0,6],[1,4],[2,6],[2,3]]],
+	["x",[[0,3],[2,6]],[[0,6],[2,3]]],
+	["y",[[0,3],[0,6],[2,6]],[[2,3],[2,8],[0,8]]],
+	["z",[[0,3],[2,3],[0,6],[2,6]]],
+	[" "],
+	["\n"]
+);
+
+function mAddToScore(qa){
+	if(gSprite[0][0]!="ship")return;
+	if(Math.floor(gScore/10000)<Math.floor((gScore+qa)/10000)){
+		gLives++;
+		aOyeah.play();
+	}
+	gScore+=Math.round(qa);
+}
+
+function mBump(){
+	var sp,lk,lx,ly,lm,lu,qa,qb,i,lr;
+	lr=0;
+	for(sp=gSprite.length-1;sp>0;sp--){
+		if((sp<0)||(sp>=gSprite.length))continue;
+		if((gSprite[sp][0]=="roka")||(gSprite[sp][0]=="rokb")||(gSprite[sp][0]=="rokc"))lr++;
+		for(lk=sp-1;lk>=0;lk--){
+			if((sp<0)||(sp>=gSprite.length))continue;
+			if((lk<0)||(lk>=gSprite.length))continue;
+			lx=gSprite[sp][2]-gSprite[lk][2];
+			ly=gSprite[sp][3]-gSprite[lk][3];
+			if(Math.sqrt(lx*lx+ly*ly)<gSprite[sp][1]+gSprite[lk][1]){
+				qa=sp;qb=lk;
+				if(gSprite[qb][0]<gSprite[qa][0]){i=qa;qa=qb;qb=i;}
+				i=gSprite[qa][0]+" "+gSprite[qb][0];
+				switch(i){
+					case"aufo roka":mBumpaUFORock(qa,qb);break;
+					case"aufo rokb":mBumpaUFORock(qa,qb);break;
+					case"aufo rokc":mBumpaUFORock(qa,qb);break;
+					case"aufo shot":mBumpaUFOShot(qa,qb);break;
+					case"aufo xtra":mBumpaUFOXtra(qa,qb);break;
+					case"roka ship":mBumpRockShip(qa   );break;
+					case"rokb ship":mBumpRockShip(qa   );break;
+					case"rokc ship":mBumpRockShip(qa   );break;
+					case"roka shot":mBumpRockShot(qa,qb);break;
+					case"rokb shot":mBumpRockShot(qa,qb);break;
+					case"rokc shot":mBumpRockShot(qa,qb);break;
+					case"ship shot":mBumpShipShot(   qb);break;
+					case"ship xtra":mBumpShipXtra(   qb);break;
+					case"shot shot":mBumpShotShot(qa,qb);break;
+					case"shot xtra":mBumpShotXtra(qa,qb);break;
+				}
+			}
+		}
+	}
+	if(gRocks<(3+Math.sqrt(gScore/1000)))mMakeRock();
+}
+
+function mBumpaUFORock(qa,qb){
+	if(qa>qb){
+		gSprite.splice(qa,1);
+		mSplitRock(qb);
+	}else{
+		mSplitRock(qb);
+		gSprite.splice(qa,1);
+	}
+	aAlien.play();
+}
+
+function mBumpaUFOShot(qa,qb){
+	if(qa>qb){
+		gSprite.splice(qa,1);
+		gSprite.splice(qb,1);
+	}else{
+		gSprite.splice(qb,1);
+		gSprite.splice(qa,1);
+	}
+	aAlien.play();
+}
+
+function mBumpaUFOXtra(qa,qb){
+	if(qa>qb){
+		gSprite.splice(qa,1);
+		gSprite.splice(qb,1);
+	}else{
+		gSprite.splice(qb,1);
+		gSprite.splice(qa,1);
+	}
+	mMakeXtra();
+	aOoops.play();
+}
+
+function mBumpRockShip(qa){
+	gLives--;
+	mSplitRock(qa);
+	gSprite.splice(0,1);
+	mKillUFOs();
+	aDeath.play();
+}
+
+function mBumpRockShot(qa,qb){
+	if(qa>qb){
+		mSplitRock(qa);
+		gSprite.splice(qb,1);
+	}else{
+		gSprite.splice(qb,1);
+		mSplitRock(qa);
+	}
+}
+
+function mBumpShipShot(qb){
+	gLives--;
+	gSprite.splice(qb,1);
+	gSprite.splice(0,1);
+	mKillUFOs();
+	aDeath.play();
+}
+
+function mBumpShipXtra(qb){
+	gShots+=100;
+	gSprite.splice(qb,1);
+	aMagic.play();
+}
+
+function mBumpShotShot(qa,qb){
+	if(qa>qb){
+		gSprite.splice(qa,1);
+		gSprite.splice(qb,1);
+	}else{
+		gSprite.splice(qb,1);
+		gSprite.splice(qa,1);
+	}
+	aBubble.play();
+}
+
+function mBumpShotXtra(qa,qb){
+	if(qa>qb){
+		gSprite.splice(qa,1);
+		gSprite.splice(qb,1);
+	}else{
+		gSprite.splice(qb,1);
+		gSprite.splice(qa,1);
+	}
+	mMakeXtra();
+	aOoops.play();
+}
+
+function mControls(){
+	if(gSprite.length<1)return;
+	var lr=false,lk,angle;
+	var lv=gMember[mMemberByName("ship")][3][0];
+	gMember[mMemberByName("ship")][4][0]=lv;
+	for(lk=0;lk<gKeys.length;lk++){
+		if(gSprite[0][0]=="ship"){
+			switch(gKeys[lk]){
+				case 37:case 65:case 81:case 83:case 87:case 90:
+					gSprite[0][7]-=gTick/20000;
+				break;
+				case 39:case 67:case 68:case 69:case 70:case 82:case 86:
+					gSprite[0][7]+=gTick/20000;
+				break;
+				case 38:case 73:case 74:case 75:case 77:case 78:case 85:case 188:
+					gSprite[0][5]+=Math.cos(gSprite[0][4])*gTick/2000;
+					gSprite[0][6]+=Math.sin(gSprite[0][4])*gTick/2000;
+					gMember[mMemberByName("ship")][4][0]+=Math.random()*lv*3;
+					aBurn.play();
+					lr=true;
+				break;
+			}
+		}else{
+			if(gKeys[lk]==27){
+				window.location.assign("http://zip-bits.com");
+			}
+			if(gKeys[lk]==13){
+				mMakeShip();
+			}
+		}
+	}
+	if(gSprite[0][0]=="ship"){
+		if(!lr){
+			aBurn.pause();
+		}
+		gSprite[0][5]*=0.995;
+		gSprite[0][6]*=0.995;
+		gSprite[0][7]*=0.85;
+	}
+}
+
+function mDrawStars(){
+	var i,s,x,y;
+    if(gStars[0]+30<gTime){
+        gStars[0]=gTime;
+        for(i=1;i<gStars.length;i++){
+            gStars[i][2]=mMakeRandomColor();
+        }
+    }
+	s=3*gs;
+	if(gStars.length<1)return;
+	for(i=1;i<gStars.length;i++){
+		gContext.fillStyle=gStars[i][2];
+		gContext.fillRect(gx+gStars[i][0],gStars[i][1],s,s);
+	}
+	gContext.fillStyle="rgb(0,0,0)";
+}
+
+function mDrawStats(){
+/*
+	var lkeys="";
+	for(var lk=0;lk<gKeys.length;lk++){
+		lkeys+=String(gKeys[lk])+"\n";
+	}
+	mDrawString( lkeys,"right",40,-300,-200);
+*/
+	mDrawString(gScore,"left" ,40,-380,-270);
+	mDrawString(gLives,"right",40,+380,-270);
+	mDrawString(gShots,"left" ,40,-380,+270);
+	if(gSprite[0][0]=="ship")return;
+	gContext.strokeStyle="rgb(255,255,255)";
+	switch(gMessage){
+		case 1:mDrawString(gTilt ,"left" ,60,-300,-200);break;
+		case 2:mDrawString(gInsts,"left" ,60,-250,-200);break;
+		case 3:mDrawString(gChars,"center",60,0,-200);break;
+	}
+}
+
+function mDrawString(qString,qAlign,qSize,qXPos,qYPos){
+	var iLine,iIndex,iChar=0,iLetter,iTemp,iDelta,iValue,iSearch;
+	var n,v,xPos=qXPos,yPos=qYPos;
+	qSize/=8;
+	qString=String(qString);
+	iLine=qString.split("\n");
+	for(iIndex=0;iIndex<iLine.length;iIndex++){
+		xPos=qXPos;
+		if(qAlign=="right"){
+			xPos=qXPos-(iLine[iIndex].length-1)*qSize*4;
+		}
+		if(qAlign=="center"){
+			xPos=qXPos-(iLine[iIndex].length-1)*qSize*2;
+		}
+		for(iChar=0;iChar<iLine[iIndex].length;iChar++){
+			iLetter=iLine[iIndex][iChar].charCodeAt(0);
+			iValue=-1;
+			if((iLetter>=g0)&&(iLetter<=g9)){
+				iValue=iLetter-g0;
+			}else if((iLetter>=gca)&&(iLetter<=gcz)){
+				iValue=iLetter-gca+10;
+			}else if((iLetter>=gla)&&(iLetter<=glz)){
+				iValue=iLetter-gla+36;
+			}
+			if((iValue>=0)&&(iValue<=62)){
+				for(n=1;n<gLetter[iValue].length;n++){
+					gContext.beginPath();
+					gContext.moveTo(
+						gx+(xPos+gLetter[iValue][n][0][0]*qSize)*gs,
+						gy+(yPos+gLetter[iValue][n][0][1]*qSize)*gs);
+					for(v=1;v<gLetter[iValue][n].length;v++){
+						gContext.lineTo(
+							gx+(xPos+gLetter[iValue][n][v][0]*qSize)*gs,
+							gy+(yPos+gLetter[iValue][n][v][1]*qSize)*gs);
+					}
+					gContext.stroke();
+				}
+			}
+			xPos+=4*qSize;
+		}
+		yPos+=10*qSize;
+	}
+}
+
+function mDrawVector(){
+	var sp,lm,mbn,ls,lx,ly,lr,lk,a,d;
+	for(sp=gSprite.length-1;sp>=0;sp--){
+		mbn=mMemberByName(gSprite[sp][0])
+		if(mbn<0)continue;
+		lm=gMember[mbn];
+		ls=gSprite[sp][1];
+		lx=gx+gSprite[sp][2]*gs;
+		ly=gy+gSprite[sp][3]*gs;
+		lr=gSprite[sp][4];
+		gContext.beginPath();
+		d=lm[1][0];
+		a=lm[1][1]+lr;
+		gContext.moveTo(lx+d*Math.cos(a),ly+d*Math.sin(a));
+		for(lk=2;lk<lm.length;lk++){
+			d=lm[lk][0];
+			a=lm[lk][1]+lr;
+			gContext.lineTo(lx+d*Math.cos(a),ly+d*Math.sin(a));
+		}
+		gContext.closePath();
+		gContext.fill();
+		gContext.strokeStyle="rgb(255,255,255)";
+		if(gSprite[sp].length>=10)gContext.strokeStyle=gSprite[sp][9];
+		gContext.stroke();
+	}
+}
+
+function mKeyDown(e){
+    var kc=gKeys.length;
+    var i;
+    for(i=kc-1;i>=0;i--){
+        if(gKeys[i]==e.keyCode){
+            return;
+        }
+    }
+    gKeys.unshift(e.keyCode);
+    switch(e.keyCode){
+		case 32:
+			gMessage=(gMessage+1)%4;
+		break;
+    	case 40:case 76:case 79:case 80:case 186:case 190:case 191:
+			if(gSprite[0][0]=="ship")mMakeShot(0,gSprite[0][4]);
+		break;
+	}
+}
+
+function mKeyUp(e){
+    var kc=gKeys.length;
+    var i;
+    for(i=kc-1;i>=0;i--){
+        if(gKeys[i]==e.keyCode){
+            gKeys.splice(i,1);
+        }
+    }
+}
+
+function mKillUFOs(){
+	var sp;
+	for(sp=gSprite.length-1;sp>=0;sp--){
+		if(gSprite[sp][0]=="aufo"){
+			gSprite.splice(sp,1);
+		}
+	}
+}
+
+function mMakeRandomColor(){
+	r=Math.floor(Math.random()*256);
+	g=Math.floor(Math.random()*256);
+	b=Math.floor(Math.random()*256);
+	switch(Math.floor(Math.random()*3)){
+		case 0:r=255;break;
+		case 1:g=255;break;
+		case 2:b=255;break;
+	}
+	return("rgb("+r+","+g+","+b+")");
+}
+
+function mMakeRock(){
+	var x=Math.random()*800-400;
+	var y=-360;
+	var r=Math.random()*Math.PI*2;
+	var p=Math.sqrt(gScore/5000)+1;
+	var dx=(Math.random()*0.08-0.04)*p;
+	var dy=(Math.random()*0.08-0.04)*p;
+	var dr=Math.random()*0.007-0.0035;
+	gSprite.push(["roka",52,x,y,r,dx,dy,dr,100000,mMakeRandomColor()]);
+	gRocks++;
+}
+
+function mMakeShip(){
+	if(gLives<1){return;}
+	if(gSprite[0][0]=="ship"){return;}
+	gSprite.unshift(["ship",20,0,0,Math.PI*1.5,0,0,0,100000]);
+	gShots=100;
+}
+
+function mMakeShot(s,a){
+    var ld=26;
+	if(gSprite[s][0]=="ship"){
+        ld=20;
+		if(gShots<=0){
+			mMakeXtra();
+			return;
+		}
+		gShots--;
+	}
+	var lcos=Math.cos(a);
+	var lsin=Math.sin(a);
+	var px=gSprite[s][2]+ld*lcos;
+	var py=gSprite[s][3]+ld*lsin;
+	var dx=0.6*lcos+gSprite[s][5];
+	var dy=0.6*lsin+gSprite[s][6];
+	gSprite.push(["shot",4,px,py,0,dx,dy,0.01,700]);
+	aShot.play();
+	aShot.currentTime=0;
+}
+
+function mMakeStars(qNum){
+	var x,y,c;
+    if(gStars.length<1)gStars.push(gTime);
+	for(;qNum>0;qNum--){
+		x=Math.round(Math.random()*1200)-600;
+		y=Math.round(Math.random()*600)+
+		  Math.round(Math.random()*600)+
+          Math.round(Math.random()*600)+
+          Math.round(Math.random()*600);
+		y/=4;y+=x/2;
+        c=mMakeRandomColor();
+		gStars.push([x,y,c]);
+	}
+}
+
+function mMakeUFO(){
+	if(gSprite[0][0]!="ship")return;
+	var x=-380;
+	var y=Math.round(Math.random()*600-300);
+	var dx=(Math.random()>0.5)?0.05:-0.05;
+	var dy=(Math.random()>0.5)?0.03:-0.03;
+	gSprite.push(["aufo",20,x,y,0,dx,dy,0,1000]);
+}
+
+function mMakeXtra(){
+	var x,y,d,r;
+	for(r=0;r<gSprite.length;r++){
+		if(gSprite[r][0]=="xtra"){
+			return;
+		}
+	}
+	r=200;
+	d=Math.floor(Math.random()*Math.PI*2);
+	x=r*Math.cos(d);
+	y=r*Math.sin(d);
+	gSprite.push(["xtra",20,x,y,0,0,0,0.001,100000]);
+}
+
+function mMemberByName(qName){
+	var r=-1;
+	for(n=0;n<gMember.length;n++){
+		if(gMember[n][0]==qName){r=n;break;}
+	}
+	return r;
+}
+
+function mMove(){
+	var sp,ls,xp,yp,rp,xd,yd;
+	for(sp=gSprite.length-1;sp>=0;sp--){
+		ls=gSprite[sp];
+		ls[2]+=ls[5]*gTick;
+		ls[3]+=ls[6]*gTick;
+		ls[4]+=ls[7]*gTick;
+		ls[8]-=gTick;
+		if(ls[2]>+450)ls[2]-=900;
+		if(ls[2]<-450)ls[2]+=900;
+		if(ls[3]>+350)ls[3]-=700;
+		if(ls[3]<-350)ls[3]+=700;
+		if(ls[4]>+2*Math.PI)ls[4]-=2*Math.PI;
+		if(ls[4]<-2*Math.PI)ls[4]+=2*Math.PI;
+		if(ls[0]=="shot"){
+			if(ls[8]<0){
+				gSprite.splice(sp,1);
+				continue;
+			}
+		}
+		if(ls[0]=="aufo"){
+			if(ls[2]<-380){ls[5]=+0.05;}
+			if(ls[2]>+380){ls[5]=-0.05;}
+			if(ls[3]<-280){ls[6]=+0.03;}
+			if(ls[3]>+280){ls[6]=-0.03;}
+			if(ls[8]<0){
+				ls[8]=500;
+				mUFOShot(sp);
+			}
+			aUFO.play();		
+		}
+		gSprite[sp]=ls;
+	}
+}
+
+function mResize(){
+	var wide,tall;
+	var gpl,gpr,gpt,gpb;
+    var ls,lm,lv,lx,ly,lz;
+	wide=window.innerWidth-30;
+	tall=window.innerHeight-30;
+	ls=(tall*4<wide*3)?tall/600:wide/800;
+	lx=wide/2;
+	ly=300*ls;
+	if((ls==gs)&&(lx==gx)&&(ly==gy)){return;}
+	gx=lx;gy=ly;
+	gCanvas.width=wide;
+	gCanvas.height=window.innerHeight-30;
+	gpl=Math.floor(gx-400*ls);
+	gpr=Math.floor(gx+400*ls);
+	gpt=Math.floor(gy-300*ls);
+	gpb=Math.floor(gy+300*ls);
+	gContext.lineWidth=ls*2;
+	gContext.lineCap="round";
+	gContext.lineJoin="round";
+	gContext.fillStyle="#000";
+	gContext.fillRect(0,0,wide,tall);
+	gContext.strokeStyle="#FFF";
+	gContext.strokeRect(gpl+1,gpt+1,gpr-gpl-2,gpb-gpt-2);
+	gContext.beginPath();
+	gContext.moveTo(gpl+2,gpt+2);
+	gContext.lineTo(gpl+2,gpb-2);
+	gContext.lineTo(gpr-2,gpb-2);
+	gContext.lineTo(gpr-2,gpt+2);
+	gContext.closePath();
+	gContext.clip();
+	if(ls==gs){return;}
+    lz=ls/gs;
+    for(lm=0;lm<gMember.length;lm++){
+        for(lv=1;lv<gMember[lm].length;lv++){
+            gMember[lm][lv][0]=gMember[lm][lv][0]*lz;
+        }
+    }
+    for(lm=0;lm<gStars.length;lm++){
+        gStars[lm][0]=(gStars[lm][0])*lz;
+        gStars[lm][1]=(gStars[lm][1])*lz;
+    }
+    gs=ls;
+}
+
+function mSplitRock(qs){
+	var r;
+	gRocks--;
+	r=gSprite[qs];
+    switch(r[0]){
+        case "roka":
+            mAddToScore(13);
+            var dx,dy,dr;
+            var p=Math.sqrt(gScore/100000)+1;
+            dx=(Math.random()*0.06-0.03)*p;
+            dy=(Math.random()*0.06-0.03)*p;
+            dr=Math.random()*0.003-0.0015;
+            gSprite.push(["rokb",r[1]/2,r[2],r[3],r[4],r[5]+dx,r[6]-dy,r[7]+dr,1000000,r[9]]);
+            gSprite.push(["rokb",r[1]/2,r[2],r[3],r[4],r[5]-dx,r[6]+dy,r[7]-dr,1000000,r[9]]);
+            gRocks+=2;
+            break;
+        case "rokb":
+            mAddToScore(26);
+            var dx,dy,dr;
+            var p=Math.sqrt(gScore/100000)+1;
+            dx=(Math.random()*0.06-0.03)*p;
+            dy=(Math.random()*0.06-0.03)*p;
+            dr=Math.random()*0.003-0.0015;
+            gSprite.push(["rokc",r[1]/2,r[2],r[3],r[4],r[5]+dx,r[6]-dy,r[7]+dr,1000000,r[9]]);
+            gSprite.push(["rokc",r[1]/2,r[2],r[3],r[4],r[5]-dx,r[6]+dy,r[7]-dr,1000000,r[9]]);
+            gRocks+=2;
+            break;
+        case"rokc":
+            mAddToScore(52);
+            break;
+	}
+	gSprite.splice(qs,1);
+	aRock.play();
+	aRock.currentTime=0;
+}
+
+function mTilt(event){
+	if(gSprite[0][0]!="ship")return;
+    var x=event.accelerationIncludingGravity.x;
+	var y=event.accelerationIncludingGravity.y;
+	switch(window.orientation){
+        case +90:gSprite[0][7]-=0.001*y;break;
+        case -90:gSprite[0][7]+=0.001*y;break;
+        case   0:gSprite[0][7]+=0.001*x;break;
+        case 180:gSprite[0][7]-=0.001*x;break;
+    }
+}
+	
+function mTime(){
+	var ldate=new Date();
+	var ltime=ldate.getYear();
+	ltime=ltime*365+ldate.getDay();
+	ltime=ltime*24+ldate.getHours();
+	ltime=ltime*60+ldate.getMinutes();
+	ltime=ltime*60+ldate.getSeconds();
+	ltime=ltime*1000+ldate.getMilliseconds();
+	gTick=ltime-gTime-1;
+	if(gTick<1)gTick=1;
+    if(gTick>50)gTick=50;
+	if(Math.floor(ltime/30000)>Math.floor(gTime/30000)){
+		mMakeUFO();
+	}
+	if(Math.floor(ltime/5000)>Math.floor(gTime/5000)){
+		gMessage=(gMessage+1)%4;
+	}
+	gTime=ltime;
+}
+
+function mTouchEnd(e){
+	var touch=event.changedTouches;
+	var n,x,y,i;
+	for(n=0;n<touch.length;n++){
+		if(gSprite[0][0]!="ship"){mMakeShip();}
+		x=touch[n].pageX-window.innerWidth/2;
+		if(x<0){
+			for(i=gKeys.length-1;i>=0;i--){
+				if(gKeys[i]==38)gKeys.splice(i,1);
+			}
+		}
+	}
+	event.preventDefault();
+}
+
+function mTouchStart(e){
+	var touch=event.changedTouches;
+	var n,x,y;
+	for(n=0;n<touch.length;n++){
+		x=touch[n].pageX-window.innerWidth/2;
+		if(x<-100){
+			gKeys.unshift(38);
+		}
+		if((x<+100)&&(x>-100)){
+			if(gSprite[0][0]!="ship"){mMakeShip();}
+		}
+		if(x>+100){
+			if(gSprite[0][0]=="ship")mMakeShot(0,gSprite[0][4]);
+		}
+	}
+	event.preventDefault();
+}
+
+function mUFOShot(qs){
+	var t,sp,px,py,dx,dy,ux,uy,pd,sd=100000,si=-1,dg;
+	for(sp=gSprite.length-1;sp>=0;sp--){
+		if(sp==qs)continue;
+		if(gSprite[sp][0]=="aufo")continue;
+		px=gSprite[sp][2]-gSprite[qs][2];
+		py=gSprite[sp][3]-gSprite[qs][3];
+		pd=Math.sqrt(px*px+py*py);
+		if(pd>300){continue;}
+		if(sd>pd){sd=pd;si=sp;}
+	}
+	if(si<0){return;}
+	px=gSprite[si][2]-gSprite[qs][2];
+	dx=gSprite[si][5]-gSprite[qs][5];
+	py=gSprite[si][3]-gSprite[qs][3];
+	dy=gSprite[si][6]-gSprite[qs][6];
+	pd=Math.sqrt(px*px+py*py);
+	ux=pd*dx+px;
+	uy=pd*dy+py;
+	if(ux==0)ux=0.01;
+	dg=Math.atan(uy/ux);
+	if(ux<0)dg+=Math.PI;
+	dg+=Math.random()*0.04-0.02;
+	mMakeShot(qs,dg)
+}
+
+function mUpdate(){
+	mResize();
+	mTime();
+	mControls();
+	mMove();
+	mBump();
+	gContext.clearRect(gx-40000*gs,gy-30000*gs,80000*gs,60000*gs);
+	mDrawStars();
+	mDrawVector();
+	mDrawStats();
+}
+
+window.onload=function(){
+	var member,deg,rad,letter,stroke,vertex;
+	for(member=0;member<gMember.length;member++){
+		for(vertex=1;vertex<gMember[member].length;vertex++){
+			gMember[member][vertex][1]=gMember[member][vertex][1]*Math.PI/180;
+		}
+	}
+	for(letter=0;letter<62;letter++){
+		for(stroke=1;stroke<gLetter[letter].length;stroke++){
+			for(vertex=0;vertex<gLetter[letter][stroke].length;vertex++){
+				gLetter[letter][stroke][vertex][0]-=1;
+				gLetter[letter][stroke][vertex][1]-=3;
+			}
+		}
+	}
+	mMakeStars(200);
+	mMakeRock();
+	document.ontouchmove=function(e){e.preventDefault();}
+	gCanvas=document.getElementById("game");
+	gContext=gCanvas.getContext("2d");
+	if(document.attachEvent){
+		window.attachEvent("ondevicemotion",mTilt);
+		document.attachEvent("ontouchend",mTouchEnd);
+		document.attachEvent("ontouchstart",mTouchStart);
+		document.attachEvent("onkeydown",mKeyDown);
+		document.attachEvent("onkeyup",mKeyUp);
+	}else{
+		window.addEventListener("devicemotion",mTilt,false);
+		document.addEventListener("touchend",mTouchEnd,false);
+		document.addEventListener("touchstart",mTouchStart,false);
+		document.addEventListener("keydown",mKeyDown,false);
+		document.addEventListener("keyup",mKeyUp,false);
+	}
+	aAlien =document.getElementById("alien");
+	aBubble=document.getElementById("bubble");
+	aBurn  =document.getElementById("burn");
+	aDeath =document.getElementById("death");
+	aMagic =document.getElementById("magic");
+	aOoops =document.getElementById("ooops");
+	aOyeah =document.getElementById("oyeah");
+	aShot  =document.getElementById("shot");
+	aRock  =document.getElementById("rock");
+	aUFO   =document.getElementById("aufo");
+	mUpdate();
+	myTime=self.setInterval(function(){mUpdate();},20);
+}
+</script>
+</head>
+<body bgcolor="#000" align="center">
+	<canvas id="game" width="1024" height="768">
+		This text is displayed if your browser does not support HTML5 Canvas.
+	</canvas>
+	<audio id="alien">
+		<source src="../audio/wav/alien.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/alien.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/ogg/alien.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp4/alien.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/alien.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/mp3/alien.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/alien.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="bubble">
+		<source src="../audio/wav/bub-l.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/bub-l.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/bub-l.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/bub-l.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/bub-l.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/bub-l.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/bub-l.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="burn">
+		<source src="../audio/wav/tburn.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/tburn.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/tburn.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/tburn.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/tburn.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/tburn.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/tburn.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="death">
+		<source src="../audio/wav/death.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/death.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/death.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/death.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/death.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/death.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/death.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="magic">
+		<source src="../audio/wav/magic.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/magic.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/magic.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/magic.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/magic.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/magic.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/magic.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="ooops">
+		<source src="../audio/wav/ooops.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/ooops.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/ooops.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/ooops.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/ooops.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/ooops.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/ooops.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="oyeah">
+		<source src="../audio/wav/oyeah.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/oyeah.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/oyeah.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/oyeah.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/oyeah.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/oyeah.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/oyeah.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="rock">
+		<source src="../audio/wav/rocka.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/rocka.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/rocka.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/rocka.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/rocka.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/rocka.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/rocka.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="shot">
+		<source src="../audio/wav/shots.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/shots.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/shots.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/shots.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/shots.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/shots.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/shots.au"   type="audio/au"  preload="auto" />
+	</audio>
+	<audio id="aufo">
+		<source src="../audio/wav/etufo.wav" type="audio/wav" preload="auto" />
+		<source src="../audio/aif/etufo.aif" type="audio/aif" preload="auto" />
+		<source src="../audio/mp4/etufo.mp4" type="audio/mp4" preload="auto" />
+		<source src="../audio/m4a/etufo.m4a" type="audio/m4a" preload="auto" />
+		<source src="../audio/ogg/etufo.ogg" type="audio/ogg" preload="auto" />
+		<source src="../audio/mp3/etufo.mp3" type="audio/mp3" preload="auto" />
+		<source src="../audio/au/etufo.au"   type="audio/au"  preload="auto" />
+	</audio>
+</body>
+</html>
